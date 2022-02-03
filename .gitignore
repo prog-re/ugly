@@ -1,2 +1,2 @@
-auth.sqlite3
-tests/devusers/*
+src/auth.sqlite3
+src/tests/devusers/*

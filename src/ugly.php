@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MIT -->
+<!-- Copyright © 2022 Martin Karlsson -->
 <?php
 
 /***********************
