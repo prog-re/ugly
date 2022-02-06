@@ -1,6 +1,6 @@
 # Ugly REST API PHP Framework
 
-Ugly is a single file REST API for PHP including authentication/authorization that is usable without server URL re-writes or from the dev server without a routerscript. All routing is done through query parameters. Hence the name.
+Ugly is a single file REST API for PHP including authentication/authorization that is usable without server URL re-writes or from the dev server without a router script. All routing is done through query parameters. Hence the name.
 
 ## Example
 
@@ -37,6 +37,11 @@ A HTTP GET request to `example.php?salutations=Stibbons` will get the response `
 ## Features
 
 * Support for GET, POST, PUT and DELETE requests
-* Support for routing on optional parameters
 * Built-in Authentication and role-based and/or scope-based Authorization
+* Support for routing on optional parameters
+* JSON responses by default
 * Ugly routes 
+
+## How to use
+
+Please refer to [the manual](./docs/manual.md) or check the files [src/tests/api.php](./src/tests/api.php), [src/tests/auth.php](./src/tests/auth.php), [src/tests/protectedapi.php](./src/tests/protectedapi.php) for some examples. Keep in mind that those are there for test purposes though.
