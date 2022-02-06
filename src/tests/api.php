@@ -19,6 +19,11 @@ $api->get(["protected"],function($_){
     return ["id" => 0,"item" => "ITM"];
 })->withAuth();
 
+$api->get(["username"],function($_){
+    $context = AuthContext::getAuthContext();
+    return $context->user->name;
+})->withAuth();
+
 $api->get([],function(){
     return "GET ok";
 });

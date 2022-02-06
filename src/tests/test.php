@@ -118,6 +118,13 @@ $testRunner
     ->UsingToken()
     ->ExpectResponseCode(200)
 
+    ->Test("Read user data through AuthContext")
+    ->WithGet("/api.php?username")
+    ->UsingToken()
+    ->Assert(function($name){
+        return $name === '"TestUser"';
+    })
+
     ->Test("GET protected by default (unauthorized)")
     ->WithGet("/protectedapi.php")
     ->ExpectResponseCode(401)

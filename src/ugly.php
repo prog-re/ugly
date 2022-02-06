@@ -1,6 +1,6 @@
-<!-- SPDX-License-Identifier: MIT -->
-<!-- Copyright © 2022 Martin Karlsson -->
 <?php
+// SPDX-License-Identifier: MIT 
+// Copyright © 2022 Martin Karlsson 
 
 /***********************
  * Main UglyAPI class
