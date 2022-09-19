@@ -74,40 +74,44 @@ class TestRunner{
         $tests = array_reverse($this->tests);
         $results = [];
         $result = [-1,null];
-        while(count($tests)){
-            $test = array_pop($tests);
-            if($test->useToken){
-                $test->credentials = [$this->authToken];
-            }
-            if($test->setup){
-                $setup = $test->setup;
-                $setup();
-            }
-            $result = curl($test->method,$test->url,$test->data,$test->credentials);
-            if($test->expectedResponseCode && $test->expectedResponseCode != $result[0]){
-                $test->errors[] = "Expected response code " . $test->expectedResponseCode . ", got " . $result[0];
-            }
-            if($test->expectedData && $test->expectedData != $result[1]){
-                $test->errors[] = "Expected data " . $test->expectedData . ", got " . $result[1];
-            }
-            if($test->assert){
-                $assertFun = $test->assert;
-                $assertRes = $assertFun($result[1]);
-                if(!$assertRes){
-                    $test->errors[] = "Custom assert failed for result: " . $result[1];
+        try{
+            while(count($tests)){
+                $test = array_pop($tests);
+                if($test->useToken){
+                    $test->credentials = [$this->authToken];
                 }
+                if($test->setup){
+                    $setup = $test->setup;
+                    $setup();
+                }
+                $result = curl($test->method,$test->url,$test->data,$test->credentials);
+                if($test->expectedResponseCode && $test->expectedResponseCode != $result[0]){
+                    $test->errors[] = "Expected response code " . $test->expectedResponseCode . ", got " . $result[0];
+                }
+                if($test->expectedData && $test->expectedData != $result[1]){
+                    $test->errors[] = "Expected data " . $test->expectedData . ", got " . $result[1];
+                }
+                if($test->assert){
+                    $assertFun = $test->assert;
+                    $assertRes = $assertFun($result[1]);
+                    if(!$assertRes){
+                        $test->errors[] = "Custom assert failed for result: " . $result[1];
+                    }
+                }
+                if($test->setToken){
+                    $dataObj = json_decode($result[1]);
+                    $this->authToken = $dataObj->token; 
+                }
+                print($test->desc);
+                if($test->errors){
+                    print(": ERROR\n");
+                }else{
+                    print(": OK\n");
+                }
+                $results[] = $test;
             }
-            if($test->setToken){
-                $dataObj = json_decode($result[1]);
-                $this->authToken = $dataObj->token; 
-            }
-            print($test->desc);
-            if($test->errors){
-                print(": ERROR\n");
-            }else{
-                print(": OK\n");
-            }
-            $results[] = $test;
+        }catch(Error $e){
+            echo "Fatal error\n";
         }
         stopDevServer();
         $errors = array_filter($results,function ($t){return !!$t->errors;});
@@ -156,11 +160,11 @@ function curl($method,$url,$data = null,$credentials = null){
     {
         curl_setopt($curl,CURLOPT_POSTFIELDS,$data);
     }
-    if(@count($credentials) == 2){
+    if($credentials && @count($credentials) == 2){
         curl_setopt($curl,CURLOPT_USERNAME,$credentials[0]);
         curl_setopt($curl,CURLOPT_PASSWORD,$credentials[1]);
     }
-    if(@count($credentials) == 1){
+    if($credentials && @count($credentials) == 1){
         $authorization = "Authorization: Bearer ".$credentials[0]; 
         curl_setopt($curl, CURLOPT_HTTPHEADER, array($authorization));
     }

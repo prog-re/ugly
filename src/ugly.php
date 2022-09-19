@@ -69,54 +69,58 @@ class Ugly{
     }
 
     public function execute(){
-      $method = $_SERVER['REQUEST_METHOD'];
-      $parameters = $_GET;
-      $handler_methods = null;
-      $handler_index = -1;
-      switch ($method) {
-        case 'GET':
-          $handler_index = $this->search_handler($this->get_methods,$parameters);
-          $handler_methods = $this->get_methods;
-          break;
-        case 'POST':
-          $handler_index = $this->search_handler($this->post_methods,$parameters);
-          $handler_methods = $this->post_methods;          
-          break;
-        case 'PUT':
-          $handler_index = $this->search_handler($this->put_methods,$parameters);
-          $handler_methods = $this->put_methods;  
-          break;
-        case 'DELETE':
-          $handler_index = $this->search_handler($this->delete_methods,$parameters);
-          $handler_methods = $this->delete_methods;
-          break;
-        default:
-        http_response_code(404);  
-          break;
-      }
-      if($handler_index != -1){
-        $method = $handler_methods[$handler_index];
-        $handler = $method->handler;
-        if($method->requiresAuth){
-          session_start();
-          $authContext = AuthContext::getAuthContext();
-          if(!$authContext->user){
-            notAuthenticated();   
-          }
-          if($method->requiresRoles && array_search($authContext->user->role,$method->requiresRoles,true) === false){
-            notAuthorized();
-          }
-          if($method->requiresScope && array_search($method->requiresScope,explode(" ",$authContext->user->scopes),true) === false){
-            notAuthorized();
-          }
+      try{
+        $method = $_SERVER['REQUEST_METHOD'];
+        $parameters = $_GET;
+        $handler_methods = null;
+        $handler_index = -1;
+        switch ($method) {
+          case 'GET':
+            $handler_index = $this->search_handler($this->get_methods,$parameters);
+            $handler_methods = $this->get_methods;
+            break;
+          case 'POST':
+            $handler_index = $this->search_handler($this->post_methods,$parameters);
+            $handler_methods = $this->post_methods;          
+            break;
+          case 'PUT':
+            $handler_index = $this->search_handler($this->put_methods,$parameters);
+            $handler_methods = $this->put_methods;  
+            break;
+          case 'DELETE':
+            $handler_index = $this->search_handler($this->delete_methods,$parameters);
+            $handler_methods = $this->delete_methods;
+            break;
+          default:
+          http_response_code(404);  
+            break;
         }
-        $ordered_args = $this->order_arguments($parameters,$handler_methods[$handler_index]->parameters);
-        $result = $handler(...$ordered_args);
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode($result);
-        exit();
-      }else{
-        http_response_code(404);
+        if($handler_index != -1){
+          $method = $handler_methods[$handler_index];
+          $handler = $method->handler;
+          if($method->requiresAuth){
+            session_start();
+            $authContext = AuthContext::getAuthContext();
+            if(!$authContext->user){
+              notAuthenticated();   
+            }
+            if($method->requiresRoles && array_search($authContext->user->role,$method->requiresRoles,true) === false){
+              notAuthorized();
+            }
+            if($method->requiresScope && array_search($method->requiresScope,explode(" ",$authContext->user->scopes),true) === false){
+              notAuthorized();
+            }
+          }
+          $ordered_args = $this->order_arguments($parameters,$handler_methods[$handler_index]->parameters);
+          $result = $handler(...$ordered_args);
+          header('Content-Type: application/json; charset=utf-8');
+          echo json_encode($result);
+          exit();
+        }else{
+          http_response_code(404);
+        }
+      }catch(Exception $e){
+        http_response_code(500);
       }
     }
 
@@ -257,20 +261,27 @@ class UglyAuth {
       return $this;
   }
 
-  public function UseDevelopmentStorage(){
+  public function UseDevelopmentStorage($path){
       $this
-          ->GetUserWith(function($username){
-              $file = fopen("./devusers/".$username,'r');
-              $json = fread($file,10000);
-              fclose($file);
-              $userdata = json_decode($json,true);
-              return new User($userdata);
+          ->GetUserWith(function($username) use ($path){
+              $userinfopath = $path ."/".$username; 
+              $file = fopen($userinfopath,'r');
+              if($file)
+              {
+                $json = fread($file,10000);
+                fclose($file);
+                $userdata = json_decode($json,true);
+                $user = new User($userdata);
+                return $user;
+              }
           })
-          ->StoreUserWith(function($user){
-              $userdata = json_encode($user);
-              $file = fopen("./devusers/".$user->name,'w');
-              fwrite($file,$userdata);
-              fclose($file);
+          ->StoreUserWith(function($user) use ($path){
+            $userdata = json_encode($user);
+            $file = fopen($path ."/".$user->name,'w');
+            if($file){
+                fwrite($file,$userdata);
+                fclose($file);
+              }
           });
       return $this;
   }
@@ -457,12 +468,23 @@ function notAuthorized(){
 
 // Debug functions
 
-function debug($data){
+function debug($text){
+  $file = fopen("./debug.txt",'a');
+  if($file){
+    fwrite($file,$text);
+    fwrite($file,"\n");
+    fclose($file);
+  }
+}
+
+function debug_var($data){
   $jsondata = json_encode($data);
   $file = fopen("./debug.txt",'a');
-  fwrite($file,$jsondata);
-  fwrite($file,"\n");
-  fclose($file);
+  if($file){
+    fwrite($file,$jsondata);
+    fwrite($file,"\n");
+    fclose($file);
+  }
 }
 
 /***********************

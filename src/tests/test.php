@@ -1,6 +1,5 @@
 <?php
 include "testrunner.php";
-
 $authToken = null;
 
 $testRunner = new TestRunner("localhost:8080");
@@ -54,7 +53,7 @@ $testRunner
     ->UsingCredentials('TestUser','TestPassword')
     ->ExpectResponseCode(200)
     ->Setup(function(){
-        @unlink('./devusers/TestUser');;
+        @unlink('./devusers/TestUser');
     })
 
     ->Test("Auth login (short expiry)")

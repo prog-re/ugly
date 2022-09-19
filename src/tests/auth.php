@@ -5,7 +5,7 @@ $auth = new UglyAuth();
 
 $auth
     ->WithTokenlifetimeMinutes(1)
-    ->UseDevelopmentStorage()
+    ->UseDevelopmentStorage(dirname(__FILE__) . '/devusers')
     ->AddRole("admin")
     ->execute();
 ?>
