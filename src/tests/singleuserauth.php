@@ -4,10 +4,8 @@ include_once "../ugly.php";
 $auth = new UglyAuth();
 
 $auth
-    ->WithSelfSignup()
+    ->SingleUser('SingleUser','Hunter10')
     ->WithBasicLogin()
     ->WithTokenlifetimeMinutes(1)
-    ->UseDevelopmentStorage(dirname(__FILE__) . '/devusers')
-    ->AddRole("admin")
     ->execute();
 ?>

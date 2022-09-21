@@ -183,8 +183,19 @@ $testRunner
     ->Test("GET protected (scope 'reader' required, authorized)")
     ->WithGet("/protectedapi.php?reader_only")
     ->UsingToken()
-    ->ExpectResponseCode(200);
+    ->ExpectResponseCode(200)
 
+    ->Test("Auth login single user")
+    ->WithGet("/singleuserauth.php?login")
+    ->UsingCredentials('SingleUser','Hunter10')
+    ->ExpectResponseCode(200)
+    ->SetToken()
+
+    ->Test("GET protected by default (authorized, single user)")
+    ->WithGet("/protectedapi.php")
+    ->UsingToken()
+    ->ExpectResponseCode(200);
+    
 
 $testRunner->Run();
 ?>

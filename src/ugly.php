@@ -201,45 +201,65 @@ class UglyAuth {
 
   public function __construct()
   {
-      $this->ugly = new Ugly();
+      $this->ugly = new Ugly();   
+  }
 
-      $this->ugly
-          ->post(["signup","?role"],function($signup,$role=""){
-              $username = $_SERVER["PHP_AUTH_USER"];
-              $getUserFunc = $this->getUserFunc;
-              $existingUser = $getUserFunc($username);
-              if($existingUser->hash){
-                http_response_code(409);
-                return null;
-              }
-              if($role != "" && !array_key_exists($role,$this->allowedRoles)){
-                http_response_code(400);
-                return null;
-              }
-              $hash = password_hash($_SERVER["PHP_AUTH_PW"], PASSWORD_BCRYPT);
-              $id = base64_url_encode(random_bytes(16));
-              $user = new User(['name'=>$username,'hash'=>$hash,'role'=>$role, 'id'=>$id]);
-              $storeUserFunc = $this->storeUserFunc;
-              $storeUserFunc($user);
-          })
-          ->get(["login"],function($login){
-              $username = $_SERVER["PHP_AUTH_USER"];
-              $password = $_SERVER["PHP_AUTH_PW"];
-              $getUserFunc = $this->getUserFunc;
-              $user = $getUserFunc($username);
-              if(password_verify($password,$user->hash)){
-                  session_start();
-                  $userArray = $user->toArray();
-                  $userArray['expires'] =  time() + (int)($this->tokenExpiresInMinutes * 60);
-                  $token = dataToToken($userArray,$this->tokenExpiresInMinutes*2);
-                  $userArray['token'] =  $token;
-                  $_SESSION = $userArray;
-                  return $userArray;
-              } else {
-                  http_response_code(404);
-              }
-              return false;
-          });
+  public function WithSelfSignup(){
+    $this->ugly->post(["signup","?role"],function($signup,$role=""){
+        $username = $_SERVER["PHP_AUTH_USER"];
+        $getUserFunc = $this->getUserFunc;
+        $existingUser = $getUserFunc($username);
+        if($existingUser->hash){
+          http_response_code(409);
+          return null;
+        }
+        if($role != "" && !array_key_exists($role,$this->allowedRoles)){
+          http_response_code(400);
+          return null;
+        }
+        $hash = password_hash($_SERVER["PHP_AUTH_PW"], PASSWORD_BCRYPT);
+        $id = base64_url_encode(random_bytes(16));
+        $user = new User(['name'=>$username,'hash'=>$hash,'role'=>$role, 'id'=>$id]);
+        $storeUserFunc = $this->storeUserFunc;
+        $storeUserFunc($user);
+    });
+    return $this;
+  }
+
+  public function WithBasicLogin(){
+    $this->ugly->get(["login"],function($login){
+        $username = $_SERVER["PHP_AUTH_USER"];
+        $password = $_SERVER["PHP_AUTH_PW"];
+        $getUserFunc = $this->getUserFunc;
+        $user = $getUserFunc($username);
+        if(password_verify($password,$user->hash)){
+            session_start();
+            $userArray = $user->toArray();
+            $userArray['expires'] =  time() + (int)($this->tokenExpiresInMinutes * 60);
+            $token = dataToToken($userArray,$this->tokenExpiresInMinutes*2);
+            $userArray['token'] =  $token;
+            $_SESSION = $userArray;
+            return $userArray;
+        } else {
+            http_response_code(404);
+        }
+        return false;
+    });
+    return $this;
+  }
+
+  public function SingleUser($username,$password){
+    $hash = password_hash($password, PASSWORD_BCRYPT);
+    $this->getUserFunc = function($inner_username) use ($username,$hash){
+      if($username === $inner_username){
+        return new User([
+          'name' => $username,
+          'hash' => $hash
+        ]);
+      }
+      return null;
+    };
+    return $this;
   }
 
   public function AddRole($role){

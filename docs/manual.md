@@ -184,7 +184,7 @@ The greedy nature of the matcher means that routes with optional parameters must
 
 Ugly has no special handling of request bodies. This means that request bodies provided as form-formatted data will be available in the global $_POST variable as usual. If JSON data is provided it can be obtained by using `json_decode(file_get_contents('php://input'))` 
 
-# Auth
+# Basic Auth
 
 Ugly has built in Auth. To provide `signup` and `login` endpoints, create a `auth.php` file (the name is not important). 
 Create an `UglyAuth` object and configure it:
@@ -194,7 +194,9 @@ Create an `UglyAuth` object and configure it:
 include_once "../ugly.php";
 
 $auth = new UglyAuth();
-$auth->GetUserWith(function($username){
+$auth->WithSelfSignup()
+     ->WithBasicLogin()
+     ->GetUserWith(function($username){
         // Must return an Ugly User object
       })
       ->StoreUserWith(function($userObj){
@@ -213,7 +215,7 @@ class User{
   public $scopes; //optional space separated string, the users scopes in the system. Example 'reader writer'
 }
 ```
-During development Ugly provides file system development storage. This should only be used when running the development server. If you leave this on in a public internet facing system you will be fired from your job and forced to beg for CPU time on street corners. Promise to only use this on your local machine. Ok? Ok:
+During development Ugly provides file system development storage. This should only be used when running the development server.
 
 ```PHP
 <?php
@@ -222,11 +224,32 @@ include_once "../ugly.php";
 $auth = new UglyAuth();
 
 $auth
+    ->WithSelfSignup()
+    ->WithBasicLogin()
     ->UseDevelopmentStorage()
     ->execute();
 ?>
 ```
+
+If the API only has a single user (or maybe needs a bootstrap user), this can be set up like this:
+
+```PHP
+<?php
+include_once "../ugly.php";
+
+$auth = new UglyAuth();
+
+$auth
+    ->SingleUser('Username','password')
+    ->WithBasicLogin()
+    ->execute();
+?>
+```
+
+
+
 *Please note that the example above is the only example in this section to work stand-alone. All other examples needs user storage and retrieving configuration to work but it has been left out to make the examples shorter.*
+
 ## Signup
 
 If the auth endpoint is configured in the file `auth.php` a POST call to 
@@ -247,6 +270,8 @@ include_once "../ugly.php";
 $auth = new UglyAuth();
 
 $auth
+    ->WithSelfSignup()
+    ->WithBasicLogin()
     ->AddRole("Buyer")
     ->AddRole("Seller")
     ->execute();
@@ -271,6 +296,8 @@ include_once "../ugly.php";
 $auth = new UglyAuth();
 
 $auth
+    ->WithSelfSignup()
+    ->WithBasicLogin()
     ->WithTokenlifetimeMinutes(15)
     ->execute();
 ?>
