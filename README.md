@@ -45,3 +45,10 @@ A HTTP GET request to `example.php?salutations=Stibbons` will get the response `
 ## How to use
 
 Please refer to [the manual](./docs/manual.md) or check the files [src/tests/api.php](./src/tests/api.php), [src/tests/auth.php](./src/tests/auth.php), [src/tests/protectedapi.php](./src/tests/protectedapi.php) for some examples. Keep in mind that those are there for test purposes though.
+
+## Ugly is too Ugly?
+
+If Ugly is too ugly for you, check out these Single File API frameworks:
+
+* https://github.com/aaviator42/zaap
+* https://github.com/jcarlosroldan/oink
